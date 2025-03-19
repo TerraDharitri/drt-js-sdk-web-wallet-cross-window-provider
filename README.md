@@ -1,0 +1,1 @@
+# drt-js-sdk-web-wallet-cross-window-provider
