@@ -56,7 +56,7 @@ export class PopupConsent extends HTMLElement implements PopupConsentModel {
         <div id="${confirmationDialogTag}">
             <div class="content">
                 <div class="body">
-                    <div class="title">Confirm on Dharitri Wallet</div>
+                    <div class="title">Confirm on DharitrI Wallet</div>
                     <div class="subtitle">Continue to ${this.walletUrl}</div>
                     <div class="actions-container">
                         <button

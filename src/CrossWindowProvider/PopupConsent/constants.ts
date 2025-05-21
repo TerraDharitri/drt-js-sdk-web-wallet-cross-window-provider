@@ -1,1 +1,1 @@
-export const confirmationDialogTag = 'drtcwp-confirmation-dialog';
+export const confirmationDialogTag = 'mxcwp-confirmation-dialog';
