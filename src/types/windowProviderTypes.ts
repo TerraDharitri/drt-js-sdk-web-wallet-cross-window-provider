@@ -6,7 +6,7 @@ import {
 } from '../enums';
 
 export type ReplyWithPostMessageObjectType = {
-  [WindowProviderResponseEnums.handshakeResponse]: boolean;
+  [WindowProviderResponseEnums.handshakeResponse]: string;
   [WindowProviderResponseEnums.loginResponse]: {
     address: string;
     signature: string;
@@ -19,6 +19,9 @@ export type ReplyWithPostMessageObjectType = {
      * custom address for alternate login
      * */
     impersonate?: string;
+  };
+  [WindowProviderResponseEnums.reloginResponse]: {
+    accessToken?: string;
   };
   [WindowProviderResponseEnums.disconnectResponse]: boolean;
   [WindowProviderResponseEnums.cancelResponse]: {
@@ -52,6 +55,7 @@ export type ResponseTypeMap = {
   [WindowProviderRequestEnums.signTransactionsRequest]: WindowProviderResponseEnums.signTransactionsResponse;
   [WindowProviderRequestEnums.signMessageRequest]: WindowProviderResponseEnums.signMessageResponse;
   [WindowProviderRequestEnums.loginRequest]: WindowProviderResponseEnums.loginResponse;
+  [WindowProviderRequestEnums.reloginRequest]: WindowProviderResponseEnums.reloginResponse;
   [WindowProviderRequestEnums.logoutRequest]: WindowProviderResponseEnums.disconnectResponse;
   [WindowProviderRequestEnums.guardTransactionsRequest]: WindowProviderResponseEnums.guardTransactionsResponse;
   [WindowProviderRequestEnums.cancelAction]: WindowProviderResponseEnums.cancelResponse;
@@ -63,6 +67,9 @@ export type RequestPayloadType = {
   [WindowProviderRequestEnums.loginRequest]: {
     token: string | undefined;
   };
+  [WindowProviderRequestEnums.reloginRequest]: {
+    token: string | undefined;
+  };
   [WindowProviderRequestEnums.logoutRequest]: undefined;
   [WindowProviderRequestEnums.signTransactionsRequest]: IPlainTransactionObject[];
   [WindowProviderRequestEnums.guardTransactionsRequest]: IPlainTransactionObject[];
@@ -70,7 +77,7 @@ export type RequestPayloadType = {
     message: string;
   };
   [WindowProviderRequestEnums.cancelAction]: undefined;
-  [WindowProviderRequestEnums.finalizeHandshakeRequest]: undefined;
+  [WindowProviderRequestEnums.finalizeHandshakeRequest]: string;
   [WindowProviderRequestEnums.finalizeResetStateRequest]: undefined;
 };
 

@@ -85,6 +85,12 @@ export class CrossWindowProvider {
     return this.initialized;
   }
 
+  onDestroy(): boolean {
+    CrossWindowProvider._instance = null;
+    this.initialized = this.windowManager.onDestroy();
+    return this.initialized;
+  }
+
   async login(
     options: {
       token?: string;
@@ -142,6 +148,8 @@ export class CrossWindowProvider {
 
   async dispose(): Promise<boolean> {
     const connectionClosed = await this.windowManager.closeConnection();
+    this.initialized = !connectionClosed;
+    CrossWindowProvider._instance = null;
     return connectionClosed;
   }
 
@@ -154,7 +162,6 @@ export class CrossWindowProvider {
 
     this.ensureConnected();
     const connectionClosed = await this.dispose();
-    this.initialized = false;
     this.disconnect();
 
     return connectionClosed;
@@ -164,6 +171,7 @@ export class CrossWindowProvider {
     if (!this.initialized) {
       throw new ErrProviderNotInitialized();
     }
+
     return this.account?.address ?? '';
   }
 
