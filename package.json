@@ -1,6 +1,6 @@
 {
   "name": "@terradharitri/sdk-web-wallet-cross-window-provider",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Signing provider for dApps: Cross Window",
   "main": "out/index.js",
   "types": "out/index.d.js",
@@ -17,11 +17,14 @@
     "lint": "eslint --fix --ext js,ts src",
     "test": "jest"
   },
-  "author": "Dharitri",
-  "license": "GPL-3.0-or-later",
+  "author": "DharitrI",
+  "license": "MIT",
   "devDependencies": {
-    "@terradharitri/sdk-core": "0.1.4",
+    "@terradharitri/sdk-core": "0.1.11",
+    "@types/jest": "^29.5.11",
     "@types/node": "18.19.0",
+    "@types/qs": "6.9.10",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "5.0.0",
     "@typescript-eslint/parser": "5.14.0",
     "eslint": "8.24.0",
@@ -36,14 +39,13 @@
     "jest-environment-jsdom": "28.1.3",
     "prettier": "3.1.0",
     "ts-jest": "29.1.1",
-    "typescript": "5.0.4",
-    "@types/jest": "^29.5.11",
-    "@types/qs": "6.9.10"
+    "typescript": "5.0.4"
   },
   "peerDependencies": {
-    "@terradharitri/sdk-core": "0.1.4"
+    "@terradharitri/sdk-core": "0.1.11"
   },
   "dependencies": {
-    "qs": "6.11.2"
+    "qs": "6.11.2",
+    "uuid": "^11.1.0"
   }
 }
