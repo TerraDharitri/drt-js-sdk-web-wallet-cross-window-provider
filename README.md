@@ -1,4 +1,4 @@
-# drt-sdk-js-web-wallet-cross-window-provider
+# drt-js-sdk-web-wallet-cross-window-provider
 
 Signing provider for dApps: Web Wallet Cross Window Provider. 
 
