@@ -1,10 +1,13 @@
 import { safeWindow, responseTypeMap } from '../constants';
+import { confirmationDialogTag } from '../CrossWindowProvider/PopupConsent/constants';
+import { PopupConsentModel } from '../CrossWindowProvider/PopupConsent/PopupConsent.model';
 import {
   WindowProviderRequestEnums,
   WindowProviderResponseEnums
 } from '../enums';
 import {
   ErrCannotEstablishHandshake,
+  ErrCouldNotLogin,
   ErrProviderNotInitialized,
   ErrProviderNotInstantiated
 } from '../errors';
@@ -20,9 +23,12 @@ export class WindowManager {
   private _walletUrl = '';
   protected initialized = false;
   public walletWindow: Window | null = null;
+  public isPopupBlocked = false;
+  private _isLoggingOut = false;
+
   private activeListeners: Map<string, (event: MessageEvent) => void> =
     new Map();
-  private static readonly SESSION_STORAGE_KEY = 'drt-wallet-session-id';
+  private static readonly SESSION_STORAGE_KEY = 'mx-wallet-session-id';
 
   constructor() {
     safeWindow.addEventListener?.('beforeunload', () => {
@@ -91,6 +97,49 @@ export class WindowManager {
     );
   }
 
+  public async openPopupConsent(): Promise<boolean> {
+    if (
+      typeof document === 'undefined' ||
+      typeof window === 'undefined' ||
+      !this.isPopupBlocked
+    ) {
+      return true;
+    }
+
+    const module = await import(
+      '../CrossWindowProvider/PopupConsent/PopupConsent'
+    );
+    const PopupConsent = module.PopupConsent;
+
+    const customElements = safeWindow.customElements;
+    if (customElements && !customElements.get(confirmationDialogTag)) {
+      customElements.define(confirmationDialogTag, PopupConsent);
+    }
+
+    const popup = document.createElement(
+      confirmationDialogTag
+    ) as PopupConsentModel & HTMLElement;
+
+    popup.walletUrl = this.walletUrl;
+
+    document.body.appendChild(popup);
+
+    const popupConsentResponse: boolean = await new Promise<boolean>(
+      (resolve) => {
+        popup.onConfirm = () => {
+          resolve(true);
+          document.body.removeChild(popup);
+        };
+        popup.onCancel = () => {
+          resolve(false);
+          document.body.removeChild(popup);
+        };
+      }
+    );
+
+    return popupConsentResponse;
+  }
+
   async handshake(type: WindowProviderRequestEnums): Promise<boolean> {
     const isOpened = this.isWalletOpened(type);
 
@@ -99,7 +148,15 @@ export class WindowManager {
     }
 
     this.closeWalletWindow();
-    await this.setWalletWindow();
+    const isWindowInitialized = await this.setWalletWindow();
+
+    if (!isWindowInitialized) {
+      const popupConsentResponse = await this.openPopupConsent();
+
+      if (!popupConsentResponse) {
+        throw new ErrCouldNotLogin();
+      }
+    }
 
     const { payload } = await this.listenOnce(
       WindowProviderResponseEnums.handshakeResponse
@@ -173,8 +230,14 @@ export class WindowManager {
     type: T;
     payload: ReplyWithPostMessagePayloadType<T>;
   }> {
+    // If the wallet window was previously blocked (e.g., by a popup blocker),
+    // reinitialize the connection by opening the wallet window again.
     if (!this.walletWindow) {
-      throw new ErrProviderNotInstantiated();
+      const isWindowInitialized = await this.setWalletWindow();
+
+      if (!isWindowInitialized) {
+        throw new ErrProviderNotInstantiated();
+      }
     }
 
     return new Promise((resolve) => {
@@ -217,21 +280,31 @@ export class WindowManager {
   }
 
   async closeConnection(): Promise<boolean> {
+    if (this._isLoggingOut) {
+      console.warn('Logout already in progress');
+      return false;
+    }
+
     if (!this.initialized) {
       throw new ErrProviderNotInitialized();
     }
 
-    await this.postMessage({
-      type: WindowProviderRequestEnums.logoutRequest,
-      payload: undefined
-    });
+    this._isLoggingOut = true;
 
-    // Reset the session on logout
-    this._session = Date.now().toString();
-    this._clearSessionFromStorage();
-    this.initialized = false;
+    try {
+      await this.postMessage({
+        type: WindowProviderRequestEnums.logoutRequest,
+        payload: undefined
+      });
 
-    return true;
+      this._session = Date.now().toString();
+      this._clearSessionFromStorage();
+      this.initialized = false;
+
+      return true;
+    } finally {
+      this._isLoggingOut = false;
+    }
   }
 
   isInitialized(): boolean {
@@ -262,8 +335,13 @@ export class WindowManager {
     this.walletWindow?.close();
   }
 
-  public async setWalletWindow(): Promise<void> {
+  public async setWalletWindow(): Promise<boolean> {
     this.walletWindow =
       safeWindow.open?.(this.walletUrl, this.walletUrl) ?? null;
+
+    const isWindowInitialized = Boolean(this.walletWindow);
+    this.isPopupBlocked = !isWindowInitialized;
+
+    return isWindowInitialized;
   }
 }
