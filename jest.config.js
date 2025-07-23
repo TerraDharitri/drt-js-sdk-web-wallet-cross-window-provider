@@ -8,6 +8,6 @@ module.exports = {
     '^.+\\.[t|j]sx?$': 'ts-jest'
   },
   moduleNameMapper: {
-    "^uuid$": "<rootDir>/node_modules/uuid",
+    "^uuid$": require.resolve('uuid'),
   }
 };
